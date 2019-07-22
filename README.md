@@ -1,4 +1,4 @@
-Deploy a production ready PostgreSQL Hot Standby
+Deploy a production ready PostgreSQL Hot Standby with Ansible
 =========
 
 Role Variables
