@@ -1,0 +1,6 @@
+---
+pg_admin_user: postgres
+pg_admin_password: admin_change_me
+pg_db: test
+pg_replication_user: replication
+pg_replication_pass: rep_change_me

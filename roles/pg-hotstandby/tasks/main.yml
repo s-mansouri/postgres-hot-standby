@@ -1,0 +1,55 @@
+---
+- name: check to see if pip is already installed
+  command: "pip --version"
+  ignore_errors: true
+  register: pip_is_installed
+  changed_when: false
+  tags: ["pg-hotstandby"]
+- block:
+
+    - name: download get-pip.py
+      get_url: url=https://bootstrap.pypa.io/get-pip.py  dest=/tmp
+
+    - name: install pip
+      command: "python /tmp/get-pip.py"
+
+    - name: delete get-pip.py
+      file: state=absent path=/tmp/get-pip.py
+
+  when: pip_is_installed.rc != 0
+  tags: ["pg-hotstandby"]
+
+- name: install ansible docker-compose module
+  pip:
+    name: docker-compose
+    state: present
+  tags: ["pg-hotstandby"]
+
+- set_fact:
+    docker_path: "{{ ansible_env.HOME }}/pg-hotstandby-{{ pg_type }}"
+  tags: ["pg-hotstandby"]
+
+- name: create pg-hotstandby directory
+  file:
+    path: "{{ docker_path }}"
+    state: directory
+  tags: ["pg-hotstandby"]
+
+- name: copy config directory
+  copy:
+    src: "{{ pg_type }}"
+    dest: "{{ docker_path }}/"
+
+- name: Uploud Docker-compose in ansible_env.HOME
+  template:
+    src: "docker-compose.yml.j2"
+    dest: "{{ docker_path }}/docker-compose.yml"
+  tags: ["pg-hotstandby"]
+
+- name: start containers
+  docker_service:
+    project_src: "{{ docker_path }}"
+    project_name: "pg-hotstandby-{{ pg_type }}"
+    build: yes
+    recreate: always
+  tags: ["pg-hotstandby"]

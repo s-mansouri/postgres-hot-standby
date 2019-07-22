@@ -1,0 +1,21 @@
+#jinja2:lstrip_blocks: True
+version: "3"
+services:
+  pg_{{ pg_type }}:
+    build: ./{{ pg_type }}
+    environment:
+      - POSTGRES_USER={{ pg_admin_user }}
+      - POSTGRES_PASSWORD={{ pg_admin_password}}
+      - POSTGRES_DB={{ pg_db }}
+      - PG_REP_USER={{ pg_replication_user }}
+      - PG_REP_PASSWORD={{ pg_replication_pass }}
+      {% for host in groups['pg_hotstandby'] %}
+      {% if hostvars[host]['pg_type'] != pg_type %}
+      - PG_{{ hostvars[host]['pg_type']|upper }}_HOST={{  hostvars[host]['ansible_host'] }}
+      {% endif %}
+      {% endfor %}
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/ARCHIVELOG:/data/pgdata/ARCHIVELOG 
+      - ./data/postgresql:/var/lib/postgresql/data
